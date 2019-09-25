@@ -1,0 +1,53 @@
+#!/bin/bash
+service=$1
+ip=$2
+userId=1
+check_result () {
+exitCode=$?
+message=$1
+if [ $exitCode -eq 0 ]; then
+	echo [SUCCESS] $message
+else
+	echo [FAILED] $message
+fi
+}
+
+
+installDependencies () {
+	if `! dpkg -s jq &>/dev/null`; then sudo apt install -y install jq &>/dev/null; fi
+}
+
+validate_intdb () {
+	echo "Verify DB is up before inserind data"
+	STATUS=$(curl -s -o /dev/null -w '%{http_code}' $ip:27017)
+        if [ $STATUS -eq 200 ]; then
+    		echo "[SUCESS] Got 200! DB Up --continuing to next test!"
+  	else
+		echo "[FAILED] Got $STATUS :( DB Server not up yet..."
+		exit 1
+	fi
+}
+
+validate_intapi () { 
+	echo export text='hello'' '$RANDOM >> ~/.bashrc
+	source ~/.bashrc
+	echo $text
+	res=$(curl -s -X POST -H "Content-Type:application/json" http://$ip:3000/postMessage \
+		-d '{"userId":"'"$userId"'","msg":"'"$text"'"}' | jq  '.success')
+	echo $res
+	if [ "$res" == "true" ]; then
+		echo "[SUCCESS] Got sucess! data saved!"
+	else
+		echo "[FAILED] Got $res :( Information  Not saved ..."
+		exit 1
+	fi
+}
+
+validate_intweb () {
+	curl  -d "userId=$userId"  "http://$ip:5000/result" > result.html 2>&1
+	echo $text
+	cat result.html | grep -c  "$text"  
+	check_result 'searching for '"$text"''
+}
+installDependencies
+validate_$service
