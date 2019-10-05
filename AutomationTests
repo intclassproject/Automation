@@ -50,10 +50,13 @@ find_in_web () {
         tag2=td
         echo "text= " $msg
         curl  -d "userId=$num"  "http://$ip:5000/result" > result.html 2>&1
-        sed -n "/<$tag1>/,/<\/$tag2>/p"  result.html | grep -i $msg  result.html
-        check_result 'searching for' $msg
+        sed -n "/<$tag1>/,/<\/$tag2>/p"  result.html  | grep "$msg" -A1 | tail -n 1 | grep $num
+        check_result "searching for $msg "
+
 }
 
+installDependencies
+validate_$service
 
 
 
