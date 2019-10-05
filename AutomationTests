@@ -42,4 +42,19 @@ validate_intweb () {
                 exit 1
         fi
 }
+
+find_in_web () {
+        msg=$1$2
+        num=$3
+        tag1=th
+        tag2=td
+        echo "text= " $msg
+        curl  -d "userId=$num"  "http://$ip:5000/result" > result.html 2>&1
+        sed -n "/<$tag1>/,/<\/$tag2>/p"  result.html | grep -i $msg  result.html
+        check_result 'searching for' $msg
+}
+
+
+
+
 "sanity_tests.sh" 75L, 1630C                                                                                                                          54,13-27      48%
